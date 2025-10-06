@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/birinji/static/css/main.3e6195ca.css",
-    "main.js": "/birinji/static/js/main.8f9fa74c.js",
+    "main.js": "/birinji/static/js/main.46ddc901.js",
     "index.html": "/birinji/index.html",
     "main.3e6195ca.css.map": "/birinji/static/css/main.3e6195ca.css.map",
-    "main.8f9fa74c.js.map": "/birinji/static/js/main.8f9fa74c.js.map"
+    "main.46ddc901.js.map": "/birinji/static/js/main.46ddc901.js.map"
   },
   "entrypoints": [
     "static/css/main.3e6195ca.css",
-    "static/js/main.8f9fa74c.js"
+    "static/js/main.46ddc901.js"
   ]
 }
