@@ -99,6 +99,8 @@ export default function Chat() {
   const [playersData, setPlayersData] = React.useState([]);
   const [open, setOpen] = React.useState(false);
   const [hasJustAnnounced, setHasJustAnnounced] = React.useState("none");
+  const [lastShownAnnouncement, setLastShownAnnouncement] = React.useState(null);
+
 
   const snackbar = useSelector(getSnackbar);
   const dispatch = useDispatch();
@@ -195,49 +197,38 @@ export default function Chat() {
   }, []);
 
   React.useEffect(() => {
-    if(announcements[announcements.length-1]) {
-      let value = 0, name;
-      switch(announcements.length) {
-        case 1:
-          value = 40;
-          name = "Birinji";
-          break;
-        case 2:
-          value = 30;
-          name = "Ikinji";
-          break;
-        case 3: 
-          value = 20;
-          name = "Ujnji";
-          break;
-        case 4:
-          value = 10;
-          name = "Dortnji";
-          break;
-      }
+  const last = announcements[announcements.length - 1];
+  if (!last || last === lastShownAnnouncement) return;
 
-      if(announcements[announcements.length-1].player == me) {
-        if(me % 2 == 0)
-          setScore1(score1+value);
-        else  
-          setScore2(score2+value);
-      }
+  let value = 0, name;
+  switch (announcements.length) {
+    case 1: value = 40; name = "Birinji"; break;
+    case 2: value = 30; name = "Ikinji"; break;
+    case 3: value = 20; name = "Ujnji"; break;
+    case 4: value = 10; name = "Dortnji"; break;
+  }
 
-      dispatch(
-        setSnackbar({
-        show: true,
-        message: `${playersData[announcements[announcements.length-1].player].nickname.length > 10 ? playersData[announcements[announcements.length-1].player].nickname.substring(0, 10) + "..." : playersData[announcements[announcements.length-1].player].nickname}: ${name} ${announcements[announcements.length-1].suit}`,
-        type: "success",
-        sx: {
-          position: "fixed",
-          top: "-20%",
-          left: "0%",
-          transform: "translate(25%, 0%)"
-        }
-        })
-      );
+  if (last.player === me) {
+    if (me % 2 === 0) setScore1(score1 + value);
+    else setScore2(score2 + value);
+  }
+
+  dispatch(setSnackbar({
+    show: true,
+    message: `${playersData[last.player]?.nickname?.length > 10
+      ? playersData[last.player].nickname.substring(0, 10) + "..."
+      : playersData[last.player]?.nickname || "Player"}: ${name} ${last.suit}`,
+    type: "success",
+    sx: {
+      position: "fixed",
+      top: "-20%",
+      left: "0%",
+      transform: "translate(25%, 0%)"
     }
-  }, [announcements.length]);
+  }));
+
+  setLastShownAnnouncement(last);
+}, [announcements]);
 
   if(quiting) 
     return <Navigate replace to={`/home`} />;
@@ -509,11 +500,27 @@ async function playBot(botId, newCards, newPlayedCards) {
         }
       }
     }
-    if(card == "none") {
-      card = newCards[botId][0];
-      newPlayedCards = [...newPlayedCards, {card, player: botId}];
-      newCards[botId] = [...newCards[botId].filter(currentCard => currentCard.code != card.code)];
-    }
+    if (card === "none" && newAnnouncements.length > 0 && newPlayedCards.length > 0) {
+  const leadSuit = newPlayedCards[0].code[1];
+  const trumps = botCards.filter(c => c.code[1] === newAnnouncements[0].suit);
+  const ofSuit = botCards.filter(c => c.code[1] === leadSuit);
+
+  // If no cards of the current suit but has trumps → play smallest trump
+  if (ofSuit.length === 0 && trumps.length > 0) {
+    const smallestTrump = getSmallestCard(trumps, true);
+    card = trumps[smallestTrump.minIndex];
+    newCards[botId] = botCards.filter(c => c.code !== card.code);
+    newPlayedCards = [...newPlayedCards, { ...card, player: botId }];
+  }
+}
+
+// still no decision → play first available card as fallback
+if (card === "none") {
+  card = newCards[botId][0];
+  newPlayedCards = [...newPlayedCards, { ...card, player: botId }];
+  newCards[botId] = newCards[botId].filter(c => c.code !== card.code);
+}
+
     }
   setCards(newCards);
    duos = [['QS', 'KS'], ['QH', 'KH'], ['QD', 'KD'], ['QC', 'KC']];
@@ -698,7 +705,7 @@ async function playBot(botId, newCards, newPlayedCards) {
     <img 
       key={index} 
       src={card.image}
-      onClick={(turn == me) && playedCards.length != 4 && (hasJustAnnounced != "none" ? (hasJustAnnounced == card.code[1] && (card.code[0] == "Q" || card.code[0] == "K")) : true) ? async () => { 
+      onClick={(turn == me) && playedCards.length != 4 && (hasJustAnnounced != "none" && playedCards.length > 0 ? (hasJustAnnounced == card.code[1] && (card.code[0] == "Q" || card.code[0] == "K")) : true) ? async () => { 
         if(hasJustAnnounced != "none")
           setHasJustAnnounced("none");
         let newCards = [...cards];

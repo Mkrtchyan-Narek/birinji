@@ -961,7 +961,7 @@ async function playBot(botId, newCards, newPlayedCards) {
     <img 
       key={index} 
       src={card.image}
-      onClick={(turn == me) && playedCards.length != 4 && (hasJustAnnounced != "none" ? (hasJustAnnounced == card.code[1] && (card.code[0] == "Q" || card.code[0] == "K")) : true) ? async () => { 
+      onClick={(turn == me) && playedCards.length != 4 && (hasJustAnnounced != "none" && playedCards.length > 0 ? (hasJustAnnounced == card.code[1] && (card.code[0] == "Q" || card.code[0] == "K")) : true) ? async () => { 
         if(hasJustAnnounced != "none")
           setHasJustAnnounced("none");
         let newCards = [...cards];
